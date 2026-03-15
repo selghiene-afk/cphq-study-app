@@ -397,11 +397,12 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
 .term-def{font-size:13px;color:var(--text);line-height:1.5}
 
 /* pioneer row */
-.pioneer-row{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 14px;display:grid;grid-template-columns:200px 80px 1fr;gap:14px;align-items:start;transition:border-color .15s}
+.pioneer-row{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 14px;display:grid;grid-template-columns:minmax(160px,220px) 1fr;gap:14px;align-items:start;transition:border-color .15s}
 .pioneer-row:hover{border-color:var(--accent-mid)}
-.pioneer-name{font-size:13px;font-weight:600;color:var(--text)}
-.pioneer-country{font-size:11px;color:var(--muted);margin-top:3px;font-family:var(--mono)}
-.pioneer-year{font-family:var(--mono);font-size:12px;font-weight:500;color:var(--correct);background:var(--correct-light);padding:3px 9px;border-radius:6px;display:inline-block;white-space:nowrap}
+.pioneer-meta{display:flex;flex-direction:column;gap:5px}
+.pioneer-name{font-size:13px;font-weight:600;color:var(--text);line-height:1.4}
+.pioneer-country{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.pioneer-year{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--correct);background:var(--correct-light);padding:2px 8px;border-radius:6px;display:inline-block;white-space:nowrap;width:fit-content}
 .pioneer-def{font-size:13px;color:var(--text);line-height:1.5;margin-bottom:6px}
 .pioneer-tags{display:flex;flex-wrap:wrap;gap:5px}
 .p-tag{font-size:11px;padding:2px 8px;border-radius:99px;border:1px solid var(--accent-mid);color:var(--accent);background:var(--accent-light);font-weight:500}
@@ -450,6 +451,7 @@ mark{background:rgba(83,74,183,.18);color:var(--accent);border-radius:3px;paddin
 @media(max-width:640px){
   .term-row{grid-template-columns:1fr}
   .pioneer-row{grid-template-columns:1fr}
+  .pioneer-meta{flex-direction:row;align-items:center;flex-wrap:wrap;gap:6px}
   .org-row{grid-template-columns:1fr;gap:8px}
   .org-badges{flex-direction:row;align-items:flex-start;flex-wrap:wrap}
   .tool-row{grid-template-columns:72px 1fr;gap:10px}
@@ -4536,8 +4538,11 @@ function renderPioneers() {
     <div class="ref-section"><div class="ref-section-hdr"><span class="ref-section-title">${era}</span><span class="ref-section-count">${byEra[era].length}</span></div>
     <div class="ref-list">${byEra[era].map(p=>`
       <div class="pioneer-row">
-        <div><div class="pioneer-name">${hl(p.name,q)}</div><div class="pioneer-country">${p.country}</div></div>
-        <div><span class="pioneer-year">${p.years}</span></div>
+        <div class="pioneer-meta">
+          <div class="pioneer-name">${hl(p.name,q)}</div>
+          <span class="pioneer-year">${p.years}</span>
+          <div class="pioneer-country">${p.country}</div>
+        </div>
         <div><div class="pioneer-def">${hl(p.def,q)}</div><div class="pioneer-tags">${p.tags.map(t=>`<span class="p-tag">${hl(t,q)}</span>`).join('')}</div></div>
       </div>`).join('')}</div></div>`).join('');
 }
