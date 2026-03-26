@@ -4109,7 +4109,7 @@ async function handleAnswer(clickedBtn, selected, q, allOpts) {
     fb.innerHTML = `<div class="fb-header correct">✓ Correct!</div>${q.hint?`<div class="fb-hint">💡 ${q.hint}</div>`:''}
     ${hasBuiltIn ? '' : '<div class="fb-loading"><div class="spinner"></div> Loading explanation…</div>'}`;
     document.getElementById('qz-next-btn').style.display = 'inline-block';
-    const rationale = await fetchRationale(q, selected, true);
+    const rationale = await fetchRationale(q, selected, true, allOpts);
     fb.innerHTML = `<div class="fb-header correct">✓ Correct!</div>${q.hint?`<div class="fb-hint">💡 ${q.hint}</div>`:''}<div class="fb-rationale">${rationale}</div>`;
   } else {
     fb.className = 'feedback-box wrong-fb show';
@@ -4117,7 +4117,7 @@ async function handleAnswer(clickedBtn, selected, q, allOpts) {
     fb.innerHTML = `<div class="fb-header wrong">✗ Incorrect — Correct: <span style="color:var(--accent)">${q.a}</span></div>${q.hint?`<div class="fb-hint">💡 ${q.hint}</div>`:''}
     ${hasBuiltInW ? '' : '<div class="fb-loading"><div class="spinner"></div> Generating rationale…</div>'}`;
     document.getElementById('qz-next-btn').style.display = 'inline-block';
-    const rationale = await fetchRationale(q, selected, false);
+    const rationale = await fetchRationale(q, selected, false, allOpts);
     fb.innerHTML = `<div class="fb-header wrong">✗ Incorrect — Correct: <span style="color:var(--accent)">${q.a}</span></div>${q.hint?`<div class="fb-hint">💡 ${q.hint}</div>`:''}<div class="fb-rationale">${rationale}</div>`;
   }
 }
@@ -4155,7 +4155,7 @@ function saveRationaleCache(cache) {
   try { localStorage.setItem('cphq_rationales', JSON.stringify(cache)); } catch {}
 }
 
-async function fetchRationale(q, selectedAnswer, isCorrect) {
+async function fetchRationale(q, selectedAnswer, isCorrect, displayedOpts) {
   window.__ratQ = q; window.__ratSel = selectedAnswer; window.__ratCorrect = isCorrect;
 
   // ── PRIORITY 1: Built-in rationale field (no API needed) ──
@@ -4164,7 +4164,8 @@ async function fetchRationale(q, selectedAnswer, isCorrect) {
       return `<div style="color:var(--muted);line-height:1.6">${q.r}</div>`;
     } else {
       // For wrong answers, show the built-in rationale + mark each option
-      const opts = (q.opts||[]).map((o,i) => {
+      const optsToShow = displayedOpts || q.opts || [];
+      const opts = optsToShow.map((o,i) => {
         const isCorrectOpt = o === q.a;
         return `<div class="opt-row ${isCorrectOpt?'correct-opt':'wrong-opt'}">
           <span class="opt-label-r ${isCorrectOpt?'c':'w'}">${String.fromCharCode(65+i)}</span>
