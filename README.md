@@ -2,7 +2,7 @@
 
 A self-hosted, offline-capable exam prep tool for the **Certified Professional in Healthcare Quality (CPHQ)** exam. Built as a single `index.html` file — no server, no login, no subscription.
 
-**Live app:** `https://your-github-username.github.io/your-repo-name`
+**Live app:** `https://selghiene-afk.github.io/cphq-study-app/`
 
 ---
 
@@ -11,20 +11,38 @@ A self-hosted, offline-capable exam prep tool for the **Certified Professional i
 | File | Purpose |
 |------|---------|
 | `index.html` | The entire app — question bank, UI, and logic in one file |
-| `FINAL_GENERATOR.js` | Node.js script to auto-generate rationales via Claude API |
+| `README.md` | This file |
 
 ---
 
 ## ✨ Features
 
-- **1,533 questions** across all CPHQ domains
-- **Flashcard mode** — flip through questions with spaced repetition
-- **Quiz mode** — timed 10-question sessions with instant feedback
-- **Mock Exam** — full-length simulated exam
-- **Analytics** — track your score trends and weak domains
-- **Study Guide, Glossary, Pioneers, Organizations, QI Tools** — reference panels
-- **Rationales** — 1,249 questions have built-in answer explanations
+- **2,500 questions** across all 7 CPHQ domains, blueprint-aligned
+- **Flashcard mode** — flip through questions with spaced repetition (SR scheduling)
+- **Quiz mode** — timed or untimed sessions with instant feedback and rationales
+- **Mock Exam** — full-length simulated exam (125 questions, 3-hour timer)
+- **Analytics** — track score trends, domain performance, and weak areas
+- **Study Guide, Glossary, Pioneers, Organizations, QI Tools** — built-in reference panels
+- **Rationales** — all 2,500 questions have built-in answer explanations (max 2 sentences)
 - **Dark/Light mode**, bookmarks, confidence ratings
+- **Domain tagging** — every question tagged to its CPHQ blueprint domain
+
+---
+
+## 🗂️ CPHQ Domain Coverage (Blueprint-Aligned)
+
+Based on the official NAHQ CPHQ Content Outline (2024):
+
+| Domain | Questions | Blueprint % |
+|--------|-----------|-------------|
+| Performance and Process Improvement | 540 | 21.6% |
+| Health Data Analytics | 520 | 20.8% |
+| Leadership and Organization | 380 | 15.2% |
+| Patient Safety | 360 | 14.4% |
+| Quality Review and Accountability | 320 | 12.8% |
+| Regulatory and Accreditation | 160 | 6.4% |
+| Population Health and Care Transitions | 220 | 8.8% |
+| **Total** | **2,500** | **100%** |
 
 ---
 
@@ -44,11 +62,13 @@ A self-hosted, offline-capable exam prep tool for the **Certified Professional i
 
 ### Updating the app
 
-1. Make your changes to `index.html`
-2. Go to your repo on GitHub
-3. Click `index.html` → click the **pencil (edit) icon** → paste new content → **Commit changes**
+**Via GitHub web (easiest):**
+1. Go to your repo on GitHub
+2. Click `index.html` → click the **pencil (edit) icon**
+3. Select all content (`Ctrl+A`) → paste the new `index.html` content
+4. Click **Commit changes**
 
-Or via command line:
+**Via command line:**
 ```bash
 git add index.html
 git commit -m "Update question bank"
@@ -57,93 +77,72 @@ git push
 
 ---
 
-## 🤖 Generating Rationales (One-Time Setup)
+## 🐛 Bug Fixes & Changelog
 
-284 questions are currently missing rationales. Run this once to fill them all in automatically using the Claude API.
+### v4.0 — Current (March 2026)
+**Question bank overhaul — 2,500 questions, fully audited**
 
-### Prerequisites
+**Data fixes applied:**
+| Fix | Count |
+|-----|-------|
+| Backslash artifacts removed (`\'`, `\"` rendering visibly) | 226 questions |
+| Answer embedded in stem (`**bold**`) converted to `______` | 7 questions |
+| Split/broken options merged (option cut mid-sentence across 2 entries) | 29 questions |
+| Answer text not matching any option (truncated answer field) | 195 questions |
+| Duplicate options within same question | 6 questions |
+| Generic placeholder distractors replaced with domain-appropriate ones | 32 options |
+| Rationale letter references removed (e.g. "Option B is correct" in rationale) | 32 rationales |
+| Answer text revealed in question stem | 1 question |
+| Duplicate questions removed | 5 questions |
+| Spelling errors fixed (distinct, ensure, behavior, organization, analyzing, etc.) | 13 fields |
 
-- [Node.js](https://nodejs.org) installed (LTS version)
-- An Anthropic API key from [console.anthropic.com](https://console.anthropic.com) → API Keys → Create Key
-
-### Steps
-
-**1. Put both files in the same folder**
-```
-CPHQ Final/
-  ├── index.html
-  └── FINAL_GENERATOR.js
-```
-
-**2. Open `FINAL_GENERATOR.js` in Notepad (or any text editor)**
-
-Find this line near the top:
-```js
-const API_KEY = 'sk-ant-api03-...';
-```
-Replace the value inside the quotes with your actual API key.
-
-**3. Open Command Prompt in that folder**
-
-- Hold `Shift` + right-click inside the folder
-- Select **"Open PowerShell window here"** or **"Open Command Prompt here"**
-
-**4. Run the generator**
-```cmd
-node FINAL_GENERATOR.js
-```
-
-You'll see live progress:
-```
-📖 Reading index.html...
-✅ Found 1533 questions
-📊 Missing rationales: 284
-
-⚡ Generating 284 rationales...
-
-[  1%]   1/284 Q12... ✓
-[  2%]   2/284 Q47... ✓
-...
-✅ Complete: 284 OK, 0 failed
-
-💾 Saved to: index_with_all_rationales.html
-```
-
-**5. Deploy the output**
-
-Rename `index_with_all_rationales.html` → `index.html` and push it to GitHub.
-
-### Cost estimate
-~284 questions × ~250 tokens each = ~71,000 tokens ≈ **less than $0.10** using Claude Haiku.
+**App logic fix:**
+- **Rationale letter mismatch** — The app shuffles option order on display, but the rationale panel was re-labeling options A/B/C/D based on the original stored order instead of the displayed order. This caused "A ← correct" to point to the wrong option. Fixed by passing the displayed (shuffled) option order to the rationale renderer.
 
 ---
 
-## 🗂️ CPHQ Domain Coverage
+### v3.0 — February 2026
+- Expanded question bank from 1,533 to 2,500 questions
+- Added domain tagging to all questions
+- Rebalanced domains to match CPHQ blueprint percentages
+- All rationales condensed to maximum 2 sentences
+- Removed 7 questions requiring embedded tables that couldn't render in plain text
+- Fixed `classList` initialization error on app load (`showPanel('flashcards')` → `showPanel('flashcard')`)
 
-| Domain | Coverage |
-|--------|----------|
-| Quality Management & Leadership | ✅ |
-| Patient Safety | ✅ |
-| Performance Improvement | ✅ |
-| Accreditation & Regulatory | ✅ |
-| Data Management & Analysis | ✅ |
-| Health Information Management | ✅ |
+---
+
+### v2.0 — January 2026
+- Generated rationales for all 934 previously missing questions via Claude API
+- Fixed JS string escaping corruption (`SyntaxError` from unescaped newlines in RAW array)
+- Fixed document body initialization — questions not displaying on page load
+- Rationale artifacts cleaned (`"},"},` patterns removed from rationale text)
+- Truncated rationales repaired (hard-cut at ~400 characters)
+
+---
+
+### v1.0 — December 2025
+- Initial release with 1,533 questions
+- Flashcard, Quiz, Mock Exam, Analytics modes
+- Spaced repetition system
 
 ---
 
 ## 🛠️ Troubleshooting
 
-**`Cannot find module` error when running generator**
-→ Make sure you're in the same folder as the `.js` file. Run `dir` to confirm both files are listed.
-
 **App loads but shows 0 questions**
 → GitHub Pages might still be building. Wait 1–2 minutes and hard-refresh (`Ctrl+Shift+R`).
 
-**Rationale shows "not yet available"**
-→ That question hasn't been processed by the generator yet. Run `FINAL_GENERATOR.js` to fill them all in.
+**Options look shuffled differently each time**
+→ This is intentional — options are randomized on every question to prevent pattern memorization.
 
-**Generator stops partway through**
-→ Just run it again — it skips questions that already have rationales and picks up from where it left off... actually re-run is safe, it won't duplicate. But to be safe, run on the latest output file.
+**Rationale shows wrong letter (e.g. "A ← correct" but correct answer is C)**
+→ This was a known bug fixed in v4.0. Make sure you are running the latest `index.html`.
+
+**App shows "Page loaded, initializing... RAW questions: 2500" but crashes**
+→ A `classList` error on a missing panel ID. Fixed in v3.0. Download the latest `index.html`.
+
+**Analytics shows incorrect domain breakdown**
+→ Domain data is embedded in the question bank. Ensure you are using the latest `index.html` which includes domain tags on all questions.
 
 ---
 
@@ -151,10 +150,9 @@ Rename `index_with_all_rationales.html` → `index.html` and push it to GitHub.
 
 - All data is stored locally in your browser (`localStorage`) — no account needed
 - The app works fully offline once loaded
-- API key is never stored in the HTML file — only used during generation
-- Questions were sourced and rephrased from multiple CPHQ review publishers
+- No API key required — all 2,500 rationales are pre-embedded
+- Questions sourced from multiple CPHQ review materials and original content, rephrased throughout
 
 ---
 
-*Built for personal CPHQ exam prep — May 2026 exam target 🎯*
-
+*Built for personal CPHQ exam prep — 2026 exam target 🎯*
