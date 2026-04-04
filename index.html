@@ -471,7 +471,7 @@ mark{background:rgba(83,74,183,.18);color:var(--accent);border-radius:3px;paddin
   <div class="header-top">
     <div class="header-brand">
       <span class="header-logo">CPHQ</span>
-      <span class="header-title">Pro <span id="q-count-badge">2,2500 Questions</span></span>
+      <span class="header-title">Pro <span id="q-count-badge">2,500 Questions</span></span>
     </div>
     <div class="header-actions">
       <button class="theme-btn" id="fontBtn" onclick="cycleFontSize()" title="Font size">Aa</button>
@@ -523,11 +523,13 @@ mark{background:rgba(83,74,183,.18);color:var(--accent);border-radius:3px;paddin
     <label style="font-size:12px;color:var(--muted)">Domain:</label>
     <select id="fc-domain-filter" onchange="loadFC()" style="font-size:12px;padding:4px 8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--font)">
       <option value="all">All Domains</option>
-      <option value="Quality Management &amp; Leadership">Quality Mgmt &amp; Leadership</option>
+      <option value="Performance &amp; Process Improvement">Performance &amp; Process Improvement</option>
+      <option value="Health Data Analytics">Health Data Analytics</option>
+      <option value="Quality Leadership &amp; Integration">Quality Leadership &amp; Integration</option>
       <option value="Patient Safety">Patient Safety</option>
-      <option value="Performance Improvement">Performance Improvement</option>
-      <option value="Accreditation &amp; Regulatory">Accreditation &amp; Regulatory</option>
-      <option value="Data Management &amp; Analysis">Data Management &amp; Analysis</option>
+      <option value="Quality Review &amp; Accountability">Quality Review &amp; Accountability</option>
+      <option value="Population Health &amp; Care Transitions">Population Health &amp; Care Transitions</option>
+      <option value="Regulatory &amp; Accreditation">Regulatory &amp; Accreditation</option>
     </select>
   </div>
   <div class="tap-hint">Tap card to reveal &nbsp;·&nbsp; Space / Arrow keys work too</div>
@@ -595,11 +597,13 @@ mark{background:rgba(83,74,183,.18);color:var(--accent);border-radius:3px;paddin
         <label>Domain:</label>
         <select id="qz-domain">
           <option value="all">All Domains</option>
-          <option value="Quality Management &amp; Leadership">Quality Mgmt &amp; Leadership</option>
+          <option value="Performance &amp; Process Improvement">Performance &amp; Process Improvement</option>
+          <option value="Health Data Analytics">Health Data Analytics</option>
+          <option value="Quality Leadership &amp; Integration">Quality Leadership &amp; Integration</option>
           <option value="Patient Safety">Patient Safety</option>
-          <option value="Performance Improvement">Performance Improvement</option>
-          <option value="Accreditation &amp; Regulatory">Accreditation &amp; Regulatory</option>
-          <option value="Data Management &amp; Analysis">Data Management &amp; Analysis</option>
+          <option value="Quality Review &amp; Accountability">Quality Review &amp; Accountability</option>
+          <option value="Population Health &amp; Care Transitions">Population Health &amp; Care Transitions</option>
+          <option value="Regulatory &amp; Accreditation">Regulatory &amp; Accreditation</option>
         </select>
         <label>Order:</label>
         <select id="qz-order">
@@ -684,7 +688,7 @@ mark{background:rgba(83,74,183,.18);color:var(--accent);border-radius:3px;paddin
       <h2 class="mock-brief-title">CPHQ Certification Exam Simulation</h2>
       <p class="mock-brief-sub">Certified Professional in Healthcare Quality</p>
       <div class="mock-brief-stats">
-        <div class="mock-brief-stat">📋 2500 Questions</div>
+        <div class="mock-brief-stat">📋 2,500 Questions</div>
         <div class="mock-brief-stat">⏱ 3 Hours</div>
         <div class="mock-brief-stat">🎯 Pass: 600</div>
       </div>
@@ -862,7 +866,7 @@ mark{background:rgba(83,74,183,.18);color:var(--accent);border-radius:3px;paddin
   </div>
 
   <div class="chart-wrap">
-    <div class="chart-title">Weakest Topics (by % wrong)</div>
+    <div class="chart-title">Weakest Topics (lowest accuracy)</div>
     <div class="bar-chart" id="weak-topics-chart"></div>
   </div>
   <div class="chart-wrap">
@@ -884,11 +888,13 @@ mark{background:rgba(83,74,183,.18);color:var(--accent);border-radius:3px;paddin
     <input type="text" id="guide-input" placeholder="Search questions or answers…" oninput="filterGuide()"/>
     <select id="guide-domain-filter" onchange="filterGuide()">
       <option value="all">All Domains</option>
-      <option value="Quality Management &amp; Leadership">Quality Mgmt</option>
+      <option value="Performance &amp; Process Improvement">Performance &amp; Process Improvement</option>
+      <option value="Health Data Analytics">Health Data Analytics</option>
+      <option value="Quality Leadership &amp; Integration">Quality Leadership &amp; Integration</option>
       <option value="Patient Safety">Patient Safety</option>
-      <option value="Performance Improvement">Performance</option>
-      <option value="Accreditation &amp; Regulatory">Accreditation</option>
-      <option value="Data Management &amp; Analysis">Data &amp; Analysis</option>
+      <option value="Quality Review &amp; Accountability">Quality Review &amp; Accountability</option>
+      <option value="Population Health &amp; Care Transitions">Population Health &amp; Care Transitions</option>
+      <option value="Regulatory &amp; Accreditation">Regulatory &amp; Accreditation</option>
     </select>
   </div>
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -965,7 +971,7 @@ mark{background:rgba(83,74,183,.18);color:var(--accent);border-radius:3px;paddin
 </div>
 
 <footer style="text-align:center;padding:16px 20px 26px;border-top:1px solid var(--border);margin-top:8px;font-size:11px;color:var(--muted);font-family:var(--mono);line-height:1.8">
-  CPHQ Pro · <span id="footer-q-count">2,500</span> Questions · 5 Domains · v3.0<br>
+  CPHQ Pro · <span id="footer-q-count">2,500</span> Questions · 7 Domains · v3.1<br>
   <span style="font-size:10px">Built for healthcare quality professionals preparing for CPHQ certification</span>
 </footer>
 
@@ -3476,21 +3482,26 @@ const RAW = [
 // CPHQ 5-DOMAIN CLASSIFICATION
 // ══════════════════════════════════════════════
 const CPHQ_DOMAINS = [
-  {label:'Quality Management & Leadership', keys:['governance','leadership','bylaws','strategic','board','council','accreditat','credentiali','licensure','staff','committee','mission','vision','culture','change management','pdca','pdsa','lean','six sigma','kaizen','cqi','continuous improvement','baldrige']},
-  {label:'Patient Safety',                  keys:['safety','sentinel','never event','rca','root cause','fmea','failure mode','incident','adverse','harm','error','near miss','medication error','fall','infection','surgical','wrong site','transfusion','just culture','safety culture']},
-  {label:'Performance Improvement',         keys:['improvement','benchmark','indicator','measure','metric','monitor','audit','review','variance','control chart','spc','statistical','process','workflow','cycle time','throughput','efficiency','effectiveness','outcome','performance']},
-  {label:'Accreditation & Regulatory',      keys:['joint commission','tjc','jcaho','cms','hipaa','osha','regulation','compliance','standard','survey','deemed','condition of participation','medicare','medicaid','law','legal','liability','malpractice','tort','leapfrog','nqf']},
-  {label:'Data Management & Analysis',      keys:['data','statistic','sample','rate','ratio','prevalence','incidence','sensitivity','specificity','reliability','validity','dashboard','scorecard','chart','graph','trend','analysis','report','epidemiology','questionnaire','histogram','pareto','scatter']}
+  {label:'Performance & Process Improvement'},
+  {label:'Health Data Analytics'},
+  {label:'Quality Leadership & Integration'},
+  {label:'Patient Safety'},
+  {label:'Quality Review & Accountability'},
+  {label:'Population Health & Care Transitions'},
+  {label:'Regulatory & Accreditation'}
 ];
-const Q_DOMAINS = RAW.map(q => {
-  const text = (q.q + ' ' + q.a + ' ' + (q.opts||[]).join(' ')).toLowerCase();
-  let best = null, bestScore = 0;
-  for (const d of CPHQ_DOMAINS) {
-    let score = d.keys.reduce((s, k) => s + (text.includes(k) ? 1 : 0), 0);
-    if (score > bestScore) { bestScore = score; best = d.label; }
-  }
-  return best || 'Quality Management & Leadership';
-});
+
+// Map raw domain strings to display labels
+const DOMAIN_LABEL_MAP = {
+  'Performance and Process Improvement': 'Performance & Process Improvement',
+  'Health Data Analytics':               'Health Data Analytics',
+  'Leadership and Organization':         'Quality Leadership & Integration',
+  'Patient Safety':                      'Patient Safety',
+  'Quality Review and Accountability':   'Quality Review & Accountability',
+  'Population Health and Care Transitions':'Population Health & Care Transitions',
+  'Regulatory and Accreditation':        'Regulatory & Accreditation'
+};
+const Q_DOMAINS = RAW.map(q => DOMAIN_LABEL_MAP[q.domain] || 'Performance & Process Improvement');
 
 // ══════════════════════════════════════════════
 // TOPIC MAPPING  (keyword → topic label)
@@ -3595,6 +3606,29 @@ if (!persist.confidence)   persist.confidence = {};   // origIdx -> 'sure'|'unsu
 if (!persist.examDate)     persist.examDate = null;
 if (!persist.fcLastIdx)    persist.fcLastIdx = 0;
 if (!persist.domainStats)  persist.domainStats = {};  // domain -> {correct, wrong}
+
+// Migrate old 5-domain stats to new 7-domain labels
+(function migrateDomainStats() {
+  if (!persist.domainStats) return;
+  const OLD_TO_NEW = {
+    'Quality Management & Leadership': 'Quality Leadership & Integration',
+    'Performance Improvement': 'Performance & Process Improvement',
+    'Accreditation & Regulatory': 'Regulatory & Accreditation',
+    'Data Management & Analysis': 'Health Data Analytics',
+    'Patient Safety': 'Patient Safety'
+  };
+  let migrated = false;
+  for (const [oldKey, newKey] of Object.entries(OLD_TO_NEW)) {
+    if (persist.domainStats[oldKey]) {
+      if (!persist.domainStats[newKey]) persist.domainStats[newKey] = {correct:0, wrong:0};
+      persist.domainStats[newKey].correct += persist.domainStats[oldKey].correct;
+      persist.domainStats[newKey].wrong   += persist.domainStats[oldKey].wrong;
+      delete persist.domainStats[oldKey];
+      migrated = true;
+    }
+  }
+  if (migrated) savePersist();
+})();
 
 // ══════════════════════════════════════════════
 // XP / LEVELS / STREAK
@@ -3707,7 +3741,7 @@ function recordTopicAnswer(q, correct) {
   if (correct) persist.topicStats[topic].correct++;
   else persist.topicStats[topic].wrong++;
   // Domain stats
-  const domain = Q_DOMAINS[q.origIdx] || 'Quality Management & Leadership';
+  const domain = Q_DOMAINS[q.origIdx] || 'Performance & Process Improvement';
   if (!persist.domainStats) persist.domainStats = {};
   if (!persist.domainStats[domain]) persist.domainStats[domain] = {correct:0, wrong:0};
   if (correct) persist.domainStats[domain].correct++;
@@ -4438,14 +4472,14 @@ function renderAnalytics() {
     <div class="bar-row">
       <div class="bar-label" title="${t.label}">${t.label}</div>
       <div class="bar-track"><div class="bar-fill bad" style="width:${t.pct}%"></div></div>
-      <div class="bar-pct" style="color:var(--wrong)">${t.pct}%</div>
+      <div class="bar-pct" style="color:var(--wrong)">${t.pct}% <span style="font-size:10px;color:var(--muted)">(${t.correct}/${t.total})</span></div>
     </div>`).join('');
 
   strongChart.innerHTML = strong.map(t => `
     <div class="bar-row">
       <div class="bar-label" title="${t.label}">${t.label}</div>
       <div class="bar-track"><div class="bar-fill good" style="width:${t.pct}%"></div></div>
-      <div class="bar-pct" style="color:var(--correct)">${t.pct}%</div>
+      <div class="bar-pct" style="color:var(--correct)">${t.pct}% <span style="font-size:10px;color:var(--muted)">(${t.correct}/${t.total})</span></div>
     </div>`).join('');
 
   // Mock Exam History
@@ -4486,7 +4520,7 @@ function confirmReset() {
   document.body.appendChild(overlay);
   overlay.querySelector('#_resetNo').onclick  = () => overlay.remove();
   overlay.querySelector('#_resetYes').onclick = () => {
-    persist = {marked:{},srData:{},xp:0,streak:0,lastStudy:null,quizHistory:[],topicStats:{},bestScore:0};
+    persist = {marked:{},srData:{},xp:0,streak:0,lastStudy:null,quizHistory:[],topicStats:{},bestScore:0,domainStats:{}};
     savePersist();
     
     updateStats();
