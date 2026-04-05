@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CPHQ Pro — Exam Preparation</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
 /* ── THEME: CHARCOAL & VIOLET ── */
 :root {
@@ -309,6 +310,22 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
 .mock-flagged-list{display:flex;flex-wrap:wrap;gap:5px}
 .mock-flagged-chip{padding:3px 9px;background:var(--warn-light);border:1px solid rgba(133,79,11,.3);border-radius:6px;color:var(--warn);font-size:12px;cursor:pointer;font-family:var(--mono)}
 .mock-flagged-chip:hover{background:rgba(133,79,11,.15)}
+
+/* ── MOCK PROGRESS DASHBOARD ── */
+.mock-progress-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+.mock-metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;text-align:center}
+.mock-metric .mm-val{font-family:var(--mono);font-size:1.6rem;font-weight:700;margin:4px 0}
+.mock-metric .mm-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:600}
+.mock-metric .mm-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.mock-chart-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:14px}
+.mock-chart-title{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
+.mock-focus-bar{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12px}
+.mock-focus-label{min-width:140px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px}
+.mock-focus-track{flex:1;height:16px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.mock-focus-fill{height:100%;border-radius:4px;transition:width .6s ease}
+.mock-focus-pct{min-width:36px;text-align:right;font-family:var(--mono);font-size:11px;font-weight:600}
+.mock-backup-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.mock-no-data{color:var(--muted);font-size:13px;padding:20px;text-align:center}
 .mock-results-wrap{max-width:640px;margin:0 auto;padding:20px 4px 40px}
 .mock-results-header{text-align:center;margin-bottom:18px}
 .mock-results-title{font-size:14px;font-weight:700;letter-spacing:.5px;color:var(--text)}
@@ -874,8 +891,49 @@ mark{background:rgba(83,74,183,.18);color:var(--accent);border-radius:3px;paddin
     <div class="bar-chart" id="strong-topics-chart"></div>
   </div>
   <div class="chart-wrap" id="mock-history-wrap" style="display:none">
-    <div class="chart-title">Mock Exam History</div>
-    <div id="mock-history-list"></div>
+    <div class="chart-title">Mock Exam Progress</div>
+
+    <!-- Metric cards -->
+    <div class="mock-progress-metrics" id="mock-prog-metrics"></div>
+
+    <!-- Score trend chart -->
+    <div class="mock-chart-section" id="mock-score-trend-wrap" style="display:none">
+      <div class="mock-chart-title">Scaled score trend</div>
+      <div style="position:relative;width:100%;height:220px"><canvas id="mock-score-trend-canvas"></canvas></div>
+      <div id="mock-score-legend" style="display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:11px;color:var(--muted)"></div>
+    </div>
+
+    <!-- Domain radar -->
+    <div class="mock-chart-section" id="mock-radar-wrap" style="display:none">
+      <div class="mock-chart-title">Domain performance — latest attempt</div>
+      <div style="position:relative;width:100%;height:280px"><canvas id="mock-radar-canvas"></canvas></div>
+    </div>
+
+    <!-- Domain trend lines -->
+    <div class="mock-chart-section" id="mock-domain-trend-wrap" style="display:none">
+      <div class="mock-chart-title">Domain trend over attempts</div>
+      <div id="mock-domain-legend" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px;font-size:11px;color:var(--muted)"></div>
+      <div style="position:relative;width:100%;height:220px"><canvas id="mock-domain-trend-canvas"></canvas></div>
+    </div>
+
+    <!-- Weakest domains -->
+    <div class="mock-chart-section" id="mock-focus-wrap" style="display:none">
+      <div class="mock-chart-title">Weakest domains — focus areas</div>
+      <div id="mock-focus-bars"></div>
+    </div>
+
+    <!-- History list -->
+    <div style="margin-top:14px">
+      <div class="mock-chart-title">Attempt history</div>
+      <div id="mock-history-list"></div>
+    </div>
+
+    <!-- Export / Import -->
+    <div class="mock-backup-row">
+      <button class="btn sm" onclick="exportMockHistory()">Export Progress</button>
+      <button class="btn sm" onclick="document.getElementById('mock-import-file').click()">Import Progress</button>
+      <input type="file" id="mock-import-file" accept=".json" style="display:none" onchange="importMockHistory(event)">
+    </div>
   </div>
   <div style="text-align:center;margin-top:14px">
     <button class="btn danger sm" onclick="confirmReset()">Reset All Progress</button>
@@ -4482,28 +4540,240 @@ function renderAnalytics() {
       <div class="bar-pct" style="color:var(--correct)">${t.pct}% <span style="font-size:10px;color:var(--muted)">(${t.correct}/${t.total})</span></div>
     </div>`).join('');
 
-  // Mock Exam History
+  // Mock Exam Progress Dashboard
   const mockHist = persist.mockHistory || [];
   const mockHistWrap = document.getElementById('mock-history-wrap');
   const mockHistList = document.getElementById('mock-history-list');
   if (mockHist.length > 0 && mockHistWrap && mockHistList) {
     mockHistWrap.style.display = '';
-    const best = Math.max(...mockHist.map(m => m.scaledScore));
-    mockHistList.innerHTML = mockHist.slice().reverse().map((m, i) => {
-      const d = new Date(m.date).toLocaleDateString();
-      const isBest = m.scaledScore === best;
-      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 4px;border-bottom:1px solid var(--border);font-size:.83rem;gap:10px;flex-wrap:wrap">
-        <span style="color:var(--muted);font-family:'JetBrains Mono',monospace;font-size:.72rem">${d}</span>
-        <span style="font-family:'JetBrains Mono',monospace;font-weight:700;color:${m.passed?'var(--correct)':'var(--wrong)'};font-size:1rem">${m.scaledScore}</span>
-        <span style="padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700;background:${m.passed?'rgba(0,212,170,.12)':'rgba(255,107,107,.12)'};color:${m.passed?'var(--correct)':'var(--wrong)'}">${m.passed?'PASS':'FAIL'}</span>
-        <span style="color:var(--muted);font-size:.72rem">${Math.round(m.rawPct*100)}% raw</span>
-        ${isBest ? '<span style="color:var(--accent3);font-size:.72rem">⭐ Best</span>' : ''}
-        <span style="color:var(--muted);font-size:.7rem">${fmtTime(m.timeUsed||0)}</span>
-      </div>`;
-    }).join('');
+    renderMockProgressDashboard(mockHist);
   } else if (mockHistWrap) {
     mockHistWrap.style.display = 'none';
   }
+}
+
+// ══════════════════════════════════════════════
+// MOCK PROGRESS DASHBOARD — Charts & Export
+// ══════════════════════════════════════════════
+let _mockChartInstances = {};
+function _destroyMockChart(id) { if (_mockChartInstances[id]) { _mockChartInstances[id].destroy(); delete _mockChartInstances[id]; } }
+
+function renderMockProgressDashboard(mockHist) {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+  const textColor = isDark ? 'rgba(255,255,255,0.55)' : 'rgba(0,0,0,0.45)';
+  const DOMAIN_IDS = ['ppi','hda','qli','ps','qra','phct','ra'];
+  const DOMAIN_SHORT = {ppi:'Perf. Improv.',hda:'Data Analytics',qli:'Leadership',ps:'Patient Safety',qra:'Quality Review',phct:'Pop. Health',ra:'Regulatory'};
+  const DOMAIN_COLORS = {ppi:'#534AB7',hda:'#378ADD',qli:'#D85A30',ps:'#1D9E75',qra:'#D4537E',phct:'#BA7517',ra:'#888780'};
+
+  // ── Metric cards ──
+  const best = Math.max(...mockHist.map(m => m.scaledScore));
+  const latest = mockHist[mockHist.length - 1];
+  const avgTime = Math.round(mockHist.reduce((s, m) => s + (m.timeUsed || 0), 0) / mockHist.length);
+  const passCount = mockHist.filter(m => m.passed).length;
+  const metricsEl = document.getElementById('mock-prog-metrics');
+  metricsEl.innerHTML = `
+    <div class="mock-metric"><div class="mm-label">Attempts</div><div class="mm-val" style="color:var(--accent)">${mockHist.length}</div></div>
+    <div class="mock-metric"><div class="mm-label">Best Score</div><div class="mm-val" style="color:var(--correct)">${best}</div></div>
+    <div class="mock-metric"><div class="mm-label">Latest</div><div class="mm-val" style="color:${latest.passed?'var(--correct)':'var(--wrong)'}">${latest.scaledScore}</div><div class="mm-sub">${latest.passed?'PASS':'FAIL'}</div></div>
+    <div class="mock-metric"><div class="mm-label">Pass Rate</div><div class="mm-val" style="color:${passCount>0?'var(--correct)':'var(--wrong)'}">${Math.round(passCount/mockHist.length*100)}%</div><div class="mm-sub">${passCount}/${mockHist.length}</div></div>
+    <div class="mock-metric"><div class="mm-label">Avg Time</div><div class="mm-val" style="color:var(--warn)">${Math.floor(avgTime/60000)}m</div></div>`;
+
+  // ── Score Trend Line Chart ──
+  if (mockHist.length >= 1) {
+    document.getElementById('mock-score-trend-wrap').style.display = '';
+    _destroyMockChart('scoreTrend');
+    const ctx = document.getElementById('mock-score-trend-canvas').getContext('2d');
+    const labels = mockHist.map((m, i) => 'Mock ' + (i + 1));
+    const scores = mockHist.map(m => m.scaledScore);
+    // rolling average
+    const rolling = scores.map((_, i) => {
+      const window = scores.slice(Math.max(0, i - 2), i + 1);
+      return Math.round(window.reduce((a, b) => a + b, 0) / window.length);
+    });
+    const legendEl = document.getElementById('mock-score-legend');
+    legendEl.innerHTML = `
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#534AB7"></span>Scaled score</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#5DCAA5"></span>Rolling avg</span>
+      <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:2px;background:#E24B4A"></span>Pass line (600)</span>`;
+    _mockChartInstances['scoreTrend'] = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          { label:'Score', data:scores, borderColor:'#534AB7', backgroundColor:isDark?'rgba(83,74,183,0.15)':'rgba(83,74,183,0.08)', fill:true, tension:0.3, pointRadius:5, pointBackgroundColor:scores.map(s=>s>=600?'#0F6E56':'#A32D2D'), borderWidth:2 },
+          { label:'Rolling avg', data:rolling, borderColor:'#5DCAA5', borderDash:[6,3], tension:0.3, pointRadius:0, borderWidth:2, fill:false },
+          { label:'Pass', data:Array(scores.length).fill(600), borderColor:'#E24B4A', borderDash:[4,4], pointRadius:0, borderWidth:1.5, fill:false }
+        ]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => c.dataset.label+': '+c.parsed.y+(c.datasetIndex===0?(c.parsed.y>=600?' PASS':' FAIL'):'') } } },
+        scales:{
+          y:{ min:Math.max(200,Math.min(...scores)-80), max:Math.min(800,Math.max(...scores)+60), ticks:{color:textColor}, grid:{color:gridColor} },
+          x:{ ticks:{color:textColor}, grid:{display:false} }
+        }
+      }
+    });
+  }
+
+  // ── Domain Radar ──
+  if (latest.domainScores) {
+    document.getElementById('mock-radar-wrap').style.display = '';
+    _destroyMockChart('radar');
+    const radarCtx = document.getElementById('mock-radar-canvas').getContext('2d');
+    const radarLabels = DOMAIN_IDS.map(id => DOMAIN_SHORT[id]);
+    const radarData = DOMAIN_IDS.map(id => {
+      const ds = (latest.domainScores||{})[id];
+      return ds && ds.total > 0 ? Math.round(ds.correct / ds.total * 100) : 0;
+    });
+    _mockChartInstances['radar'] = new Chart(radarCtx, {
+      type: 'radar',
+      data: {
+        labels: radarLabels,
+        datasets: [{
+          label:'Latest', data:radarData, borderColor:'#534AB7',
+          backgroundColor: isDark ? 'rgba(83,74,183,0.2)' : 'rgba(83,74,183,0.12)',
+          borderWidth:2, pointRadius:4, pointBackgroundColor:'#534AB7'
+        },{
+          label:'Pass target', data:Array(7).fill(73),
+          borderColor:'#E24B4A', borderDash:[4,4], backgroundColor:'transparent', borderWidth:1.5, pointRadius:0
+        }]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => c.dataset.label+': '+c.parsed.r+'%' } } },
+        scales:{
+          r:{
+            min:0, max:100, ticks:{stepSize:20, color:textColor, backdropColor:'transparent'},
+            grid:{color:gridColor}, pointLabels:{color:textColor, font:{size:11}}, angleLines:{color:gridColor}
+          }
+        }
+      }
+    });
+  }
+
+  // ── Domain Trend Lines ──
+  if (mockHist.length >= 2) {
+    document.getElementById('mock-domain-trend-wrap').style.display = '';
+    _destroyMockChart('domainTrend');
+    const dtCtx = document.getElementById('mock-domain-trend-canvas').getContext('2d');
+    const dtLabels = mockHist.map((_, i) => 'Mock ' + (i + 1));
+    const legendEl2 = document.getElementById('mock-domain-legend');
+    legendEl2.innerHTML = DOMAIN_IDS.map(id =>
+      `<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:${DOMAIN_COLORS[id]}"></span>${DOMAIN_SHORT[id]}</span>`
+    ).join('');
+    const dtDatasets = DOMAIN_IDS.map(id => ({
+      label: DOMAIN_SHORT[id],
+      data: mockHist.map(m => {
+        const ds = (m.domainScores||{})[id];
+        return ds && ds.total > 0 ? Math.round(ds.correct / ds.total * 100) : null;
+      }),
+      borderColor: DOMAIN_COLORS[id], borderWidth:1.5, tension:0.3, pointRadius:2, fill:false, spanGaps:true
+    }));
+    _mockChartInstances['domainTrend'] = new Chart(dtCtx, {
+      type: 'line',
+      data: { labels: dtLabels, datasets: dtDatasets },
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false} },
+        scales:{
+          y:{ min:0, max:100, ticks:{color:textColor, callback:v=>v+'%'}, grid:{color:gridColor} },
+          x:{ ticks:{color:textColor}, grid:{display:false} }
+        }
+      }
+    });
+  } else {
+    document.getElementById('mock-domain-trend-wrap').style.display = 'none';
+  }
+
+  // ── Weakest Domains ──
+  if (latest.domainScores) {
+    document.getElementById('mock-focus-wrap').style.display = '';
+    const focusBars = document.getElementById('mock-focus-bars');
+    const domainPcts = DOMAIN_IDS.map(id => {
+      const ds = (latest.domainScores||{})[id];
+      const pct = ds && ds.total > 0 ? Math.round(ds.correct / ds.total * 100) : 0;
+      return { id, label: DOMAIN_SHORT[id], pct, correct: ds ? ds.correct : 0, total: ds ? ds.total : 0 };
+    }).sort((a, b) => a.pct - b.pct);
+    focusBars.innerHTML = domainPcts.slice(0, 4).map(d => {
+      const barCol = d.pct < 50 ? 'var(--wrong)' : d.pct < 73 ? 'var(--warn)' : 'var(--correct)';
+      return `<div class="mock-focus-bar">
+        <div class="mock-focus-label">${d.label}</div>
+        <div class="mock-focus-track"><div class="mock-focus-fill" style="width:${d.pct}%;background:${barCol}"></div></div>
+        <div class="mock-focus-pct" style="color:${barCol}">${d.pct}%</div>
+        <div style="font-size:10px;color:var(--muted);min-width:40px">${d.correct}/${d.total}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── History list ──
+  const mockHistList = document.getElementById('mock-history-list');
+  const best2 = Math.max(...mockHist.map(m => m.scaledScore));
+  mockHistList.innerHTML = mockHist.slice().reverse().map((m, i) => {
+    const d = new Date(m.date).toLocaleDateString();
+    const isBest = m.scaledScore === best2;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 4px;border-bottom:1px solid var(--border);font-size:.83rem;gap:10px;flex-wrap:wrap">
+      <span style="color:var(--muted);font-family:var(--mono);font-size:.72rem">${d}</span>
+      <span style="font-family:var(--mono);font-weight:700;color:${m.passed?'var(--correct)':'var(--wrong)'};font-size:1rem">${m.scaledScore}</span>
+      <span style="padding:2px 8px;border-radius:20px;font-size:.7rem;font-weight:700;background:${m.passed?'var(--correct-light)':'var(--wrong-light)'};color:${m.passed?'var(--correct)':'var(--wrong)'}">${m.passed?'PASS':'FAIL'}</span>
+      <span style="color:var(--muted);font-size:.72rem">${Math.round(m.rawPct*100)}% raw</span>
+      ${isBest ? '<span style="color:var(--accent);font-size:.72rem;font-weight:600">Best</span>' : ''}
+      <span style="color:var(--muted);font-size:.7rem">${fmtTime(m.timeUsed||0)}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Export / Import mock progress ──
+function exportMockHistory() {
+  const data = {
+    mockHistory: persist.mockHistory || [],
+    quizHistory: persist.quizHistory || [],
+    domainStats: persist.domainStats || {},
+    topicStats: persist.topicStats || {},
+    bestScore: persist.bestScore || 0,
+    exportDate: new Date().toISOString()
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'cphq-progress-' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click(); URL.revokeObjectURL(url);
+}
+
+function importMockHistory(evt) {
+  const file = evt.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.mockHistory && !data.quizHistory) { alert('Invalid progress file.'); return; }
+      const confirmMsg = 'Import ' + (data.mockHistory||[]).length + ' mock exam(s) and ' + (data.quizHistory||[]).length + ' quiz record(s)?\n\nThis will MERGE with your current data (not replace).';
+      if (!confirm(confirmMsg)) return;
+      // Merge mock history (deduplicate by date)
+      const existingDates = new Set((persist.mockHistory||[]).map(m => m.date));
+      (data.mockHistory||[]).forEach(m => { if (!existingDates.has(m.date)) { persist.mockHistory = persist.mockHistory || []; persist.mockHistory.push(m); } });
+      // Merge quiz history
+      const existQDates = new Set((persist.quizHistory||[]).map(q => q.date));
+      (data.quizHistory||[]).forEach(q => { if (!existQDates.has(q.date)) { persist.quizHistory.push(q); } });
+      // Merge domain stats (additive)
+      if (data.domainStats) {
+        if (!persist.domainStats) persist.domainStats = {};
+        Object.entries(data.domainStats).forEach(([k, v]) => {
+          if (!persist.domainStats[k]) persist.domainStats[k] = { correct: 0, wrong: 0 };
+          persist.domainStats[k].correct += v.correct || 0;
+          persist.domainStats[k].wrong += v.wrong || 0;
+        });
+      }
+      if (data.bestScore && data.bestScore > (persist.bestScore||0)) persist.bestScore = data.bestScore;
+      savePersist();
+      renderAnalytics();
+      alert('Progress imported successfully!');
+    } catch (err) { alert('Error reading file: ' + err.message); }
+  };
+  reader.readAsText(file);
+  evt.target.value = '';
 }
 
 function confirmReset() {
@@ -4520,7 +4790,7 @@ function confirmReset() {
   document.body.appendChild(overlay);
   overlay.querySelector('#_resetNo').onclick  = () => overlay.remove();
   overlay.querySelector('#_resetYes').onclick = () => {
-    persist = {marked:{},srData:{},xp:0,streak:0,lastStudy:null,quizHistory:[],topicStats:{},bestScore:0,domainStats:{}};
+    persist = {marked:{},srData:{},xp:0,streak:0,lastStudy:null,quizHistory:[],topicStats:{},bestScore:0,domainStats:{},mockHistory:[],bookmarks:{},confidence:{},examDate:persist.examDate,fcLastIdx:0};
     savePersist();
     
     updateStats();
@@ -5051,7 +5321,7 @@ function submitMockExam(timedOut) {
     rawPct: results.rawPct,
     passed: results.passed,
     timeUsed: results.timeUsed,
-    domainScores: results.domainScores
+    domainScores: results.domainResults
   });
   savePersist();
   saveMockState();
@@ -5309,6 +5579,11 @@ document.getElementById('themeBtn').addEventListener('click', () => {
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   document.documentElement.setAttribute('data-theme', isDark ? '' : 'dark');
   document.getElementById('themeBtn').textContent = isDark ? '🌙' : '☀️';
+  // Re-render charts with updated theme colors
+  const anaPanel = document.getElementById('panel-analytics');
+  if (anaPanel && anaPanel.classList.contains('active')) {
+    setTimeout(() => renderAnalytics(), 50);
+  }
 });
 
 // ══════════════════════════════════════════════
