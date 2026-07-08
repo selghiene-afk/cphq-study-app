@@ -2738,9 +2738,11 @@ function confirmSubmitMock() {
   const answered = Object.keys(mockState.answers).length;
   const flagged  = Object.keys(mockState.flagged).length;
   const unanswered = total - answered;
+  const firstFlagged = flagged > 0 ? Object.keys(mockState.flagged).map(Number).sort((a,b)=>a-b)[0] : null;
   const overlay = document.createElement('div');
+  overlay.id = '_mockSubmitOverlay';
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9990;display:flex;align-items:center;justify-content:center;padding:16px';
-  overlay.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:26px;max-width:380px;width:100%">
+  overlay.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:26px;max-width:380px;width:100%;max-height:90vh;overflow-y:auto">
     <div style="font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:700;margin-bottom:12px">Submit Exam?</div>
     <table style="width:100%;font-size:.85rem;margin-bottom:14px;border-collapse:collapse">
       <tr><td style="padding:4px 0;color:var(--muted)">Answered</td><td style="text-align:right;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--correct)">${answered} / ${total}</td></tr>
@@ -2748,14 +2750,21 @@ function confirmSubmitMock() {
       <tr><td style="padding:4px 0;color:var(--muted)">Flagged for review</td><td style="text-align:right;font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--warn)">${flagged}</td></tr>
     </table>
     ${unanswered > 0 ? '<div style="font-size:.78rem;color:var(--wrong);background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:6px;padding:8px 10px;margin-bottom:14px">Unanswered questions will be marked incorrect.</div>' : ''}
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      ${flagged > 0 ? `<button onclick="this.closest('div[style]').remove();navigateMockTo(${Object.keys(mockState.flagged).map(Number).sort((a,b)=>a-b)[0]})" style="padding:10px 14px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);border-radius:8px;color:var(--warn);font-size:.85rem;cursor:pointer">Review Flagged</button>` : ''}
-      <button id="_mockSubmitYes" style="flex:1;padding:10px;background:linear-gradient(135deg,#f59e0b,#d97706);border:none;border-radius:8px;color:#0a0e1a;font-weight:700;font-size:.88rem;cursor:pointer">Submit Now</button>
-      <button onclick="this.closest('div[style]').remove()" style="padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:.85rem;cursor:pointer">Cancel</button>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      ${firstFlagged !== null ? `<button id="_mockReviewFlagged" style="width:100%;padding:11px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);border-radius:8px;color:var(--warn);font-size:.85rem;font-weight:600;cursor:pointer">Review Flagged (${flagged})</button>` : ''}
+      <button id="_mockSubmitYes" style="width:100%;padding:11px;background:linear-gradient(135deg,#f59e0b,#d97706);border:none;border-radius:8px;color:#0a0e1a;font-weight:700;font-size:.88rem;cursor:pointer">Submit Now</button>
+      <button id="_mockSubmitCancel" style="width:100%;padding:11px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:.85rem;cursor:pointer">Cancel</button>
     </div>
   </div>`;
   document.body.appendChild(overlay);
-  overlay.querySelector('#_mockSubmitYes').onclick = () => { overlay.remove(); submitMockExam(false); };
+  const closeOverlay = () => overlay.remove();
+  overlay.querySelector('#_mockSubmitYes').onclick = () => { closeOverlay(); submitMockExam(false); };
+  overlay.querySelector('#_mockSubmitCancel').onclick = closeOverlay;
+  if (firstFlagged !== null) {
+    overlay.querySelector('#_mockReviewFlagged').onclick = () => { closeOverlay(); navigateMockTo(firstFlagged); };
+  }
+  // clicking the dark backdrop closes the modal
+  overlay.addEventListener('click', (ev) => { if (ev.target === overlay) closeOverlay(); });
 }
 
 function submitMockExam(timedOut) {
