@@ -748,14 +748,14 @@ mark{background:rgba(83,74,183,.18);color:var(--accent);border-radius:3px;paddin
       <table class="mock-domain-table">
         <thead><tr><th>Domain</th><th>Questions</th></tr></thead>
         <tbody>
-          <tr><td>Performance &amp; Process Improvement</td><td>27</td></tr>
-          <tr><td>Health Data Analytics</td><td>26</td></tr>
-          <tr><td>Quality Leadership &amp; Integration</td><td>19</td></tr>
-          <tr><td>Patient Safety</td><td>18</td></tr>
-          <tr><td>Quality Review &amp; Accountability</td><td>16</td></tr>
-          <tr><td>Population Health &amp; Care Transitions</td><td>11</td></tr>
-          <tr><td>Regulatory &amp; Accreditation</td><td>8</td></tr>
-          <tr><td>Mixed / Unscored Pretest</td><td>15</td></tr>
+          <tr><td>Performance &amp; Process Improvement</td><td>28</td></tr>
+          <tr><td>Health Data Analytics</td><td>21</td></tr>
+          <tr><td>Patient Safety</td><td>19</td></tr>
+          <tr><td>Regulatory &amp; Accreditation</td><td>17</td></tr>
+          <tr><td>Quality Leadership &amp; Integration</td><td>14</td></tr>
+          <tr><td>Population Health &amp; Care Transitions</td><td>14</td></tr>
+          <tr><td>Quality Review &amp; Accountability</td><td>12</td></tr>
+          <tr><td>Unscored Pretest (spread across domains)</td><td>15</td></tr>
         </tbody>
       </table>
       <div class="mock-warn">⚠ Once you begin, the timer starts and cannot be paused. Your answers are saved automatically.</div>
@@ -2389,36 +2389,32 @@ filterGuide();
 // ══════════════════════════════════════════════
 // MOCK EXAM — DOMAIN DEFINITIONS
 // ══════════════════════════════════════════════
+// Domain quotas aligned to the NAHQ CPHQ blueprint weights, applied to 125 scored
+// questions. The remaining 15 questions are unscored pretest items drawn
+// proportionally from every domain (as on the real exam), for a 140-question total.
+// Scored quotas: PPI 22% (28), HDA 17% (21), PS 15% (19), RA 14% (17),
+// QLI 11% (14), PHCT 11% (14), QRA 10% (12) = 125.
 const MOCK_DOMAINS = [
-  { id:'ppi',   label:'Performance & Process Improvement', quota:27,
-    keywords:['lean','six sigma','pdsa','pdca','kaizen','root cause','rca','fmea','failure mode','process improvement','rapid cycle','five why','5 why','fishbone','ishikawa','pareto','flowchart','workflow','cycle time','waste','value stream','kanban','statistical process','spc','control chart','run chart','variation','defect','sigma','dmaic','improvement team','quality improvement','qi project','benchmarking','best practice','reliability','high reliability'] },
-  { id:'hda',   label:'Health Data Analytics', quota:26,
-    keywords:['data','statistic','sample','rate','ratio','prevalence','incidence','sensitivity','specificity','reliability','validity','dashboard','scorecard','chart','graph','trend','analysis','report','epidemiology','survey','questionnaire','measure','metric','indicator','numerator','denominator','percentage','mean','median','mode','standard deviation','variance','correlation','regression','histogram','scatter','data collection','data quality','data integrity','abstracting','coding','icd','drg','case mix','risk adjustment','stratification','cohort','population'] },
-  { id:'qli',   label:'Quality Leadership & Integration', quota:19,
-    keywords:['strategic planning','stakeholder','culture of quality','leadership','governance','board','bylaws','mission','vision','strategic goal','organizational culture','change management','communication','team building','collaboration','engagement','accountability','transparency','quality council','quality committee','charter','priority','initiative','program','policy','procedure','quality management system','continuous quality','total quality','customer satisfaction','patient satisfaction','staff engagement','physician engagement','medical staff','credentialing','privileging'] },
-  { id:'ps',    label:'Patient Safety', quota:18,
-    keywords:['patient safety','sentinel event','never event','adverse event','near miss','close call','incident report','occurrence report','medication error','wrong site','wrong patient','wrong procedure','fall prevention','pressure ulcer','hospital-acquired','hai','infection prevention','infection control','hand hygiene','surgical safety','time out','checklist','human factors','just culture','safety culture','no blame','psychological safety','disclosure','harm','risk management','failure analysis','proactive risk','mortality review','morbidity','complication','adverse drug','blood transfusion'] },
-  { id:'qra',   label:'Quality Review & Accountability', quota:16,
-    keywords:['clinical practice guideline','evidence-based','documentation','medical record','peer review','utilization review','case review','medical necessity','appropriateness','discharge','length of stay','readmission','concurrent review','retrospective review','prospective','criteria','threshold','variance','audit','tracer','chart review','patient experience','hcahps','press ganey','satisfaction survey','complaint','grievance','patient rights','informed consent','advance directive','living will','ethics','quality indicator','core measure','accountability measure'] },
-  { id:'phct',  label:'Population Health & Care Transitions', quota:11,
-    keywords:['population health','care coordination','care transition','discharge planning','readmission reduction','continuity of care','care management','disease management','case management','chronic disease','preventive care','community health','social determinant','health equity','access to care','primary care','medical home','patient-centered medical','aco','bundled payment','post-acute','skilled nursing','home health','hospice','palliative','telehealth','remote monitoring','care plan','transition of care','medication reconciliation','follow-up'] },
-  { id:'ra',    label:'Regulatory & Accreditation', quota:8,
-    keywords:['joint commission','tjc','jcaho','cms','condition of participation','cop','medicare','medicaid','osha','hipaa','hitech','regulation','compliance','accreditation','survey','deemed status','waiver','state regulation','federal regulation','licensure','certification','standard','element of performance','national patient safety goal','npsg','survey readiness','mock survey','tracer methodology','environment of care','life safety'] },
-  { id:'other', label:'Mixed / Pretest', quota:15, keywords:[] }
+  { id:'ppi',  label:'Performance & Process Improvement',    quota:28, rawDomain:'Performance and Process Improvement' },
+  { id:'hda',  label:'Health Data Analytics',                quota:21, rawDomain:'Health Data Analytics' },
+  { id:'ps',   label:'Patient Safety',                       quota:19, rawDomain:'Patient Safety' },
+  { id:'ra',   label:'Regulatory & Accreditation',          quota:17, rawDomain:'Regulatory and Accreditation' },
+  { id:'qli',  label:'Quality Leadership & Integration',     quota:14, rawDomain:'Quality Leadership' },
+  { id:'phct', label:'Population Health & Care Transitions', quota:14, rawDomain:'Population Health and Care Transitions' },
+  { id:'qra',  label:'Quality Review & Accountability',      quota:12, rawDomain:'Quality Review and Accountability' }
 ];
 
+const MOCK_PRETEST_COUNT = 15;
+
+// Map the stored raw domain string on each question to a mock-domain id.
+const RAW_DOMAIN_TO_ID = {};
+MOCK_DOMAINS.forEach(d => { RAW_DOMAIN_TO_ID[d.rawDomain] = d.id; });
+
 function classifyMockDomain(q) {
-  const text = (q.q + ' ' + (q.opts||[]).join(' ')).toLowerCase();
-  let best = 'other', bestScore = 0;
-  for (const d of MOCK_DOMAINS) {
-    if (d.id === 'other') continue;
-    const score = d.keywords.reduce((s,kw) => s + (text.includes(kw) ? 1 : 0), 0);
-    if (score > bestScore) { bestScore = score; best = d.id; }
-  }
-  return best;
+  return RAW_DOMAIN_TO_ID[q.domain] || 'ppi';
 }
 
-// Precompute once
+// Precompute once: each question mapped to its blueprint domain id via the stored field.
 const MOCK_Q_DOMAINS = RAW.map(classifyMockDomain);
 
 // ══════════════════════════════════════════════
@@ -2447,34 +2443,87 @@ let mockTimerInterval = null;
 // MOCK EXAM — BUILD QUESTION SET
 // ══════════════════════════════════════════════
 function buildMockExam() {
-  const byDomain = {};
-  MOCK_DOMAINS.forEach(d => { byDomain[d.id] = []; });
-  RAW.forEach((q, idx) => { byDomain[MOCK_Q_DOMAINS[idx]].push(idx); });
-  Object.values(byDomain).forEach(arr => {
+  const shuffle = arr => {
     for (let i = arr.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [arr[i], arr[j]] = [arr[j], arr[i]];
     }
+    return arr;
+  };
+
+  // Build and shuffle a pool of question indices per blueprint domain,
+  // sourced from each question's stored domain field.
+  const byDomain = {};
+  MOCK_DOMAINS.forEach(d => { byDomain[d.id] = []; });
+  RAW.forEach((q, idx) => {
+    const id = MOCK_Q_DOMAINS[idx];
+    if (byDomain[id]) byDomain[id].push(idx);
   });
+  Object.values(byDomain).forEach(shuffle);
+
+  // Draw the scored questions for each domain per its blueprint quota, then
+  // draw a proportional number of extra pretest questions from the same pool.
+  const totalScoredQuota = MOCK_DOMAINS.reduce((s, d) => s + d.quota, 0); // 125
   const selected = [];
-  for (const domain of MOCK_DOMAINS) {
+
+  // First pass: scored questions (tracked per domain, counted toward score).
+  const cursor = {};                       // how many already consumed per pool
+  MOCK_DOMAINS.forEach(domain => {
     const pool = byDomain[domain.id];
-    const needed = domain.quota;
-    const picked = pool.slice(0, Math.min(needed, pool.length));
-    // If a domain is short, pull from 'other' to fill
-    let extra = needed - picked.length;
-    if (extra > 0 && domain.id !== 'other') {
-      const fallback = byDomain['other'].splice(0, extra);
-      picked.push(...fallback);
+    const take = Math.min(domain.quota, pool.length);
+    for (let i = 0; i < take; i++) {
+      selected.push({ origIdx: pool[i], domainId: domain.id, isPretest: false });
     }
-    const isPretest = domain.id === 'other';
-    picked.forEach(origIdx => selected.push({ origIdx, domainId: domain.id, isPretest }));
+    cursor[domain.id] = take;
+  });
+
+  // Second pass: 15 pretest (unscored) questions, distributed across domains in
+  // proportion to their blueprint weight, drawn from remaining unused questions.
+  let pretestPlaced = 0;
+  // Largest-remainder allocation of MOCK_PRETEST_COUNT across domains.
+  const alloc = MOCK_DOMAINS.map(d => {
+    const exact = (d.quota / totalScoredQuota) * MOCK_PRETEST_COUNT;
+    return { id: d.id, base: Math.floor(exact), frac: exact - Math.floor(exact) };
+  });
+  let allocatedSoFar = alloc.reduce((s, a) => s + a.base, 0);
+  alloc.sort((a, b) => b.frac - a.frac);
+  let ai = 0;
+  while (allocatedSoFar < MOCK_PRETEST_COUNT) {
+    alloc[ai % alloc.length].base += 1;
+    allocatedSoFar++;
+    ai++;
   }
-  // Shuffle all 140 together
-  for (let i = selected.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [selected[i], selected[j]] = [selected[j], selected[i]];
+  const pretestByDomain = {};
+  alloc.forEach(a => { pretestByDomain[a.id] = a.base; });
+
+  MOCK_DOMAINS.forEach(domain => {
+    const pool = byDomain[domain.id];
+    let want = pretestByDomain[domain.id] || 0;
+    while (want > 0 && cursor[domain.id] < pool.length) {
+      selected.push({ origIdx: pool[cursor[domain.id]], domainId: domain.id, isPretest: true });
+      cursor[domain.id]++;
+      want--;
+      pretestPlaced++;
+    }
+  });
+
+  // Fallback: if any domain pool ran dry and we are short on pretest questions,
+  // fill from any domain that still has unused questions.
+  if (pretestPlaced < MOCK_PRETEST_COUNT) {
+    outer:
+    for (const domain of MOCK_DOMAINS) {
+      const pool = byDomain[domain.id];
+      while (cursor[domain.id] < pool.length) {
+        selected.push({ origIdx: pool[cursor[domain.id]], domainId: domain.id, isPretest: true });
+        cursor[domain.id]++;
+        pretestPlaced++;
+        if (pretestPlaced >= MOCK_PRETEST_COUNT) break outer;
+      }
+    }
   }
+
+  // Shuffle the full exam so domains are interleaved, then number the questions.
+  shuffle(selected);
   return selected.map((item, i) => ({ ...item, examQNum: i + 1 }));
 }
 
@@ -2806,7 +2855,7 @@ function submitMockExam(timedOut) {
 function calculateMockResults() {
   const questions = mockState.questions;
   const domainResults = {};
-  MOCK_DOMAINS.forEach(d => { domainResults[d.id] = { correct:0, total: d.quota, label: d.label }; });
+  MOCK_DOMAINS.forEach(d => { domainResults[d.id] = { correct:0, total:0, label: d.label }; });
   let scoredCorrect = 0, scoredTotal = 0;
   questions.forEach(item => {
     const q = RAW[item.origIdx];
@@ -2816,6 +2865,7 @@ function calculateMockResults() {
       scoredTotal++;
       if (correct) scoredCorrect++;
       if (!domainResults[item.domainId]) domainResults[item.domainId] = { correct:0, total:0, label:item.domainId };
+      domainResults[item.domainId].total += 1;
       domainResults[item.domainId].correct += correct ? 1 : 0;
     }
   });
@@ -2891,8 +2941,8 @@ function renderMockResults() {
   // Domain breakdown
   const domBreak = document.getElementById('mock-domain-breakdown');
   domBreak.innerHTML = '';
-  MOCK_DOMAINS.filter(d => d.id !== 'other').forEach(d => {
-    const dr = r.domainResults[d.id] || { correct:0, total: d.quota };
+  MOCK_DOMAINS.forEach(d => {
+    const dr = r.domainResults[d.id] || { correct:0, total:0 };
     const pct = dr.total > 0 ? Math.round((dr.correct / dr.total) * 100) : 0;
     const color = pct >= 75 ? 'var(--correct)' : pct >= 60 ? 'var(--warn)' : 'var(--wrong)';
     const row = document.createElement('div');
