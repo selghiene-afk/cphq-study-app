@@ -111,10 +111,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:1
 .filter-btn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
 .tap-hint{text-align:center;color:var(--muted);font-size:12px;margin-bottom:12px}
 
-.card-scene{perspective:1200px;height:300px;cursor:pointer;margin-bottom:18px}
-.card-inner{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.4,0,.2,1)}
+.card-scene{perspective:1200px;min-height:300px;cursor:pointer;margin-bottom:18px;transition:height .25s ease}
+.card-inner{width:100%;height:100%;min-height:inherit;position:relative;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.4,0,.2,1)}
 .card-scene.flipped .card-inner{transform:rotateY(180deg)}
-.card-face{position:absolute;width:100%;height:100%;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:var(--radius);display:flex;flex-direction:column;justify-content:center;align-items:center;padding:26px;text-align:center;overflow-y:auto}
+.card-face{position:absolute;top:0;left:0;width:100%;height:100%;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:var(--radius);display:flex;flex-direction:column;justify-content:center;align-items:center;padding:26px;text-align:center;overflow-y:auto}
 .card-choices{display:flex;flex-direction:column;gap:7px;width:100%;max-width:460px;margin-top:16px}
 .card-choice{display:flex;align-items:flex-start;gap:9px;padding:9px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:13px;text-align:left;line-height:1.5;color:var(--text)}
 .card-choice .cc-letter{font-family:var(--mono);font-weight:700;font-size:12px;color:var(--accent);flex-shrink:0}
@@ -652,6 +652,7 @@ mark{background:rgba(83,74,183,.18);color:var(--accent);border-radius:3px;paddin
         <select id="qz-order">
           <option value="random">Random</option>
           <option value="seq">Sequential</option>
+          <option value="unseen">Unseen / New Only</option>
           <option value="due">SR Due First</option>
           <option value="weak">Weakest Topics</option>
           <option value="bookmarked">Bookmarked Only</option>
@@ -1461,6 +1462,26 @@ function renderFC() {
     document.getElementById('sr-next-info').textContent = '○ Not yet reviewed';
   }
   document.getElementById('cardScene').classList.remove('flipped');
+  syncCardHeight();
+}
+
+// Size the flip-card to fit whichever face has more content, so long questions
+// or long answers are never clipped inside a fixed-height box.
+function syncCardHeight() {
+  const scene = document.getElementById('cardScene');
+  if (!scene) return;
+  const faces = scene.querySelectorAll('.card-face');
+  // Temporarily release fixed height so each face reports its natural content height.
+  let tallest = 0;
+  faces.forEach(f => {
+    const prev = f.style.height;
+    f.style.height = 'auto';
+    tallest = Math.max(tallest, f.scrollHeight);
+    f.style.height = prev;
+  });
+  // Enforce a sensible minimum and add a little breathing room.
+  const target = Math.max(300, tallest + 4);
+  scene.style.height = target + 'px';
 }
 
 function flipCard() { document.getElementById('cardScene').classList.toggle('flipped'); }
@@ -1526,6 +1547,16 @@ document.addEventListener('keydown', e => {
   if (e.key === 'u' || e.key === 'U') markCard('unknown');
 });
 
+// Recompute flip-card height on resize (text reflow changes content height).
+(function() {
+  let rt;
+  window.addEventListener('resize', () => {
+    if (!document.getElementById('panel-flashcard').classList.contains('active')) return;
+    clearTimeout(rt);
+    rt = setTimeout(syncCardHeight, 120);
+  });
+})();
+
 // Swipe gestures for flashcards
 (function() {
   let swipeStartX = 0;
@@ -1588,6 +1619,16 @@ function startQuiz() {
   }
 
   if (order === 'due')        pool.sort((a,b) => srIsDue(b.origIdx) - srIsDue(a.origIdx));
+  if (order === 'unseen') {
+    // Keep only questions never encountered: no SR history and no known/review mark.
+    const unseen = pool.filter(c => !persist.srData[c.origIdx] && !persist.marked[c.origIdx]);
+    if (unseen.length) {
+      pool = shuffle(unseen);
+    } else {
+      // No unseen questions left in this scope; tell the user and fall back to all.
+      alert('No unseen questions left' + (domainSel !== 'all' ? ' in this domain' : '') + '. You have encountered them all. Showing all questions instead.');
+    }
+  }
   if (order === 'weak')       pool = getWeakTopicPool(pool);
   if (order === 'bookmarked') pool = pool.filter(c => persist.bookmarks[c.origIdx]);
   if (!pool.length && order === 'bookmarked') { pool = RAW.map((c,i) => ({...c, origIdx: i})); }
