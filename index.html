@@ -297,6 +297,7 @@ select{background:var(--surface2);border:1px solid var(--border);border-radius:8
 .mock-flag-btn{padding:4px 11px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:12px;cursor:pointer;transition:all .18s}
 .mock-flag-btn:hover{border-color:var(--warn);color:var(--warn)}
 .mock-flag-btn.active{background:var(--warn-light);border-color:var(--warn);color:var(--warn);font-weight:600}
+#mock-kbd-toggle.kbd-on{background:var(--correct-light,rgba(34,197,94,.12));border-color:var(--correct);color:var(--correct);font-weight:600}
 .mock-question-text{font-size:14px;color:var(--text);line-height:1.75;margin-bottom:16px}
 .mock-options-list{display:flex;flex-direction:column;gap:7px;margin-bottom:14px}
 .exam-option{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:border-color .15s,background .15s;background:var(--surface2)}
@@ -784,6 +785,7 @@ mark{background:rgba(83,74,183,.18);color:var(--accent);border-radius:3px;paddin
     <div class="mock-exam-body">
       <div class="mock-q-header">
         <span id="mock-q-num-label" class="mock-q-num">Question 1</span>
+        <button id="mock-kbd-toggle" class="mock-flag-btn" onclick="toggleMockKeyboardMode()">⌨ Keyboard: ON</button>
         <button id="mock-flag-btn" class="mock-flag-btn" onclick="flagMockQuestion()">🚩 Flag</button>
       </div>
       <div id="mock-question-text" class="mock-question-text"></div>
@@ -793,6 +795,9 @@ mark{background:rgba(83,74,183,.18);color:var(--accent);border-radius:3px;paddin
         <button class="mock-btn-nav" onclick="navigateMock(-1)">← Previous</button>
         <button class="mock-btn-submit" id="mock-submit-btn" onclick="confirmSubmitMock()">Submit Exam</button>
         <button class="mock-btn-nav" onclick="navigateMock(1)">Next →</button>
+      </div>
+      <div class="mock-kbd-hint" id="mock-kbd-hint" style="margin-top:10px;font-size:11px;color:var(--muted);text-align:center;line-height:1.6">
+        ⌨ Shortcuts: <b>↑</b> A · <b>↓</b> B · <b>←</b> C · <b>→</b> D · <b>Space</b> Next · <b>Shift+Space</b> Back
       </div>
     </div>
     <div class="mock-navigator-wrap">
@@ -2697,6 +2702,9 @@ function renderMockQuestion() {
     div.addEventListener('click', () => selectMockAnswer(oi));
     div.addEventListener('keydown', e => {
       if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); selectMockAnswer(oi); }
+      // When keyboard mode is ON, let the global handler own the arrow keys
+      // so Left/Right select C/D instead of just moving focus.
+      if (mockKeyboardMode) return;
       if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { e.preventDefault(); ol.children[Math.min(oi + 1, q.opts.length - 1)]?.focus(); }
       if (e.key === 'ArrowUp'   || e.key === 'ArrowLeft')  { e.preventDefault(); ol.children[Math.max(oi - 1, 0)]?.focus(); }
     });
@@ -2704,6 +2712,7 @@ function renderMockQuestion() {
   });
 
   updateMockNavigator();
+  syncMockKeyboardToggle();
 }
 
 function selectMockAnswer(optIdx) {
@@ -2736,6 +2745,51 @@ function navigateMockTo(qNum) {
   // Scroll exam body into view on mobile
   document.getElementById('mock-active').scrollIntoView({behavior:'smooth', block:'start'});
 }
+
+// ══════════════════════════════════════════════
+// MOCK EXAM — KEYBOARD SHORTCUTS
+// Arrow Up=A, Down=B, Left=C, Right=D · Space=Next · Shift+Space=Back
+// Toggleable via the Keyboard Mode button; only active on the exam screen.
+// ══════════════════════════════════════════════
+let mockKeyboardMode = (localStorage.getItem('cphq_mock_kbd') ?? '1') === '1';
+
+function toggleMockKeyboardMode() {
+  mockKeyboardMode = !mockKeyboardMode;
+  localStorage.setItem('cphq_mock_kbd', mockKeyboardMode ? '1' : '0');
+  syncMockKeyboardToggle();
+}
+
+function syncMockKeyboardToggle() {
+  const btn = document.getElementById('mock-kbd-toggle');
+  const hint = document.getElementById('mock-kbd-hint');
+  if (btn) {
+    btn.textContent = '⌨ Keyboard: ' + (mockKeyboardMode ? 'ON' : 'OFF');
+    btn.classList.toggle('kbd-on', mockKeyboardMode);
+  }
+  if (hint) hint.style.display = mockKeyboardMode ? '' : 'none';
+}
+
+// Capture phase (true) so this runs before any focused option's own key handler.
+document.addEventListener('keydown', e => {
+  if (!mockKeyboardMode) return;
+  if (!document.body.classList.contains('exam-mode')) return;
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable) return;
+
+  const q = mockState.questions[mockState.currentQ - 1];
+  const optCount = q ? RAW[q.origIdx].opts.length : 0;
+
+  switch (e.key) {
+    case 'ArrowUp':    if (optCount > 0) { e.preventDefault(); e.stopPropagation(); selectMockAnswer(0); } break;
+    case 'ArrowDown':  if (optCount > 1) { e.preventDefault(); e.stopPropagation(); selectMockAnswer(1); } break;
+    case 'ArrowLeft':  if (optCount > 2) { e.preventDefault(); e.stopPropagation(); selectMockAnswer(2); } break;
+    case 'ArrowRight': if (optCount > 3) { e.preventDefault(); e.stopPropagation(); selectMockAnswer(3); } break;
+    case ' ':
+      e.preventDefault(); e.stopPropagation();
+      navigateMock(e.shiftKey ? -1 : 1);
+      break;
+  }
+}, true);
 
 // ══════════════════════════════════════════════
 // MOCK EXAM — NAVIGATOR
